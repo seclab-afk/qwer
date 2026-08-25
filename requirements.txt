@@ -1,0 +1,17 @@
+langgraph
+openai
+python-dotenv
+pyyaml
+pydantic
+httpx
+tzdata
+wcwidth
+docker
+llama-index
+llama-index-embeddings-huggingface
+llama-index-llms-ollama
+llama-index-llms-openai-like
+llama-index-retrievers-bm25
+rich
+rank_bm25
+llama-index-readers-file

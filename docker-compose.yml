@@ -1,0 +1,18 @@
+services:
+  afk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+    image: afk
+    container_name: afk
+    network_mode: host
+    privileged: true
+    stdin_open: true
+    tty: true
+    environment:
+      - DOCKER_API_VERSION=1.43
+    volumes:
+      - /data/afk/:/afk/
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /afk

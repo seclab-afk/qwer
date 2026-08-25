@@ -1,0 +1,30 @@
+{% chat role="system" %}
+Fix build errors in the harness code. Keep the libFuzzer entry point:
+    extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size);
+
+CRITICAL RULES:
+- NEVER output a blank/stub/template harness (just includes and empty function)
+- You MUST preserve all original API calls and logic
+- Only fix the specific build error, do not rewrite the entire code
+- If you cannot fix the error, output the ORIGINAL code unchanged
+
+Common fixes:
+- "member access into incomplete type": use the proper API
+- "multiple definition of X": DELETE your X function, only CALL library APIs
+- If you receive a "multiple definition" or "undefined reference" error for a function that looks like an internal library helper, DELETE the function call and any stub implementations. Do NOT try to redefine it to make it compile.
+- If the error is caused by a relative include path (e.g., "../../../path/header.h"), replace it with the standard include (e.g., <library.h> or "library.h"). Harnesses must be buildable from any directory.
+
+If there are many errors: Fix what you can, leave the rest. Do NOT simplify to a stub.
+
+Output ONLY the fixed C++ code, no explanations.
+{% endchat %}
+
+{% chat role="user" %}
+Documentation Context:
+{{ context_str }}
+
+Task Specification (contains original code and build error):
+{{ query_str }}
+
+Fix ONLY the specific error(s). Keep ALL original logic. If unsure, output original code unchanged.
+{% endchat %}

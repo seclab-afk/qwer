@@ -1,0 +1,1549 @@
+# ------------------------------------------------------------------------------------------------
+# libpng
+libpng_api:
+  repo_url: https://github.com/pnggroup/libpng.git
+  branch: 83b23a888b4395c3ae0af3f6d484fce3e4a81155
+  build_dir: ./libpng_api
+  lib_dir: libpng_api/.libs/libpng16.so
+  dependencies:
+    - build-essential
+    - autoconf
+    - automake
+    - libtool
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libpng_api
+  build_library:
+    - git clone https://github.com/madler/zlib.git
+    - cd zlib
+    - ./configure
+    - make -j$(nproc)
+    - cd ..
+    - cat scripts/pnglibconf.dfa | sed -e 's/option STDIO/option STDIO disabled/' -e 's/option WARNING /option WARNING disabled/' > scripts/pnglibconf.dfa.temp
+    - mv scripts/pnglibconf.dfa.temp scripts/pnglibconf.dfa
+    - autoreconf -f -i
+    - ./configure
+    - make -j$(nproc) clean
+    - make -j$(nproc) libpng16.la
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/.libs/libpng16.so -Wl,-rpath={lib_base}/.libs {lib_base}/zlib/libz.a
+
+libpng_fuzz:
+  repo_url: https://github.com/pnggroup/libpng.git
+  branch: 83b23a888b4395c3ae0af3f6d484fce3e4a81155
+  build_dir: ./libpng_fuzz
+  lib_dir: libpng_fuzz/.libs/libpng16.a
+  dependencies:
+    - zlib1g-dev
+    - build-essential
+    - autoconf
+    - automake
+    - libtool
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libpng_fuzz
+    OUT: ./libpng_fuzz
+  build_library:
+    - git clone https://github.com/madler/zlib.git
+    - cd zlib
+    - ./configure
+    - make -j$(nproc)
+    - cd ..
+    - cat scripts/pnglibconf.dfa | sed -e 's/option STDIO/option STDIO disabled/' -e 's/option WARNING /option WARNING disabled/' > scripts/pnglibconf.dfa.temp
+    - mv scripts/pnglibconf.dfa.temp scripts/pnglibconf.dfa
+    - autoreconf -f -i
+    - ./configure
+    - make -j$(nproc) clean
+    - make -j$(nproc) libpng16.la
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/.libs/libpng16.a {lib_base}/zlib/libz.a
+
+libpng_cov:
+  repo_url: https://github.com/pnggroup/libpng.git
+  branch: 83b23a888b4395c3ae0af3f6d484fce3e4a81155
+  build_dir: ./libpng_cov
+  lib_dir: libpng_cov/.libs/libpng16.a
+  dependencies:
+    - zlib1g-dev
+    - build-essential
+    - autoconf
+    - automake
+    - libtool
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libpng_cov
+    OUT: ./libpng_cov
+  build_library:
+    - git clone https://github.com/madler/zlib.git
+    - cd zlib
+    - ./configure
+    - make -j$(nproc)
+    - cd ..
+    - cat scripts/pnglibconf.dfa | sed -e 's/option STDIO/option STDIO disabled/' -e 's/option WARNING /option WARNING disabled/' > scripts/pnglibconf.dfa.temp
+    - mv scripts/pnglibconf.dfa.temp scripts/pnglibconf.dfa
+    - autoreconf -f -i
+    - ./configure
+    - make -j$(nproc) clean
+    - make -j$(nproc) libpng16.la
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} -Wl,--whole-archive {lib_base}/.libs/libpng16.a -Wl,--no-whole-archive {lib_base}/zlib/libz.a
+# ------------------------------------------------------------------------------------------------
+# libxml2
+libxml2_api:
+  repo_url: https://gitlab.gnome.org/GNOME/libxml2.git
+  branch: 22f9d730898d2dfcc03a484e65e1f8fc3675225f
+  build_dir: ./libxml2_api
+  lib_dir: libxml2_api/.libs/libxml2.so
+  dependencies:
+    - autoconf
+    - automake
+    - libtool
+    - pkg-config
+    - docbook-xsl
+    - zlib1g-dev
+    - liblzma-dev
+  include_dir:
+    - "{lib_base}/include"
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libxml2_api
+    OUT: ./libxml2_api
+  build_library:
+    - ./autogen.sh --disable-static --enable-shared --with-zlib --with-lzma --without-debug --without-http --without-python --with-docs
+    - sed -i 's/DOXYGEN) -q/DOXYGEN)/g' doc/Makefile
+    - make -j$(nproc) clean
+    - make -j$(nproc) libxml2.la
+    - make -j$(nproc) -C doc
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/include {harness_path} -o {output} {lib_base}/.libs/libxml2.so -Wl,-rpath={lib_base}/.libs -lz -llzma
+
+libxml2_fuzz:
+  repo_url: https://gitlab.gnome.org/GNOME/libxml2.git
+  branch: 22f9d730898d2dfcc03a484e65e1f8fc3675225f
+  build_dir: ./libxml2_fuzz
+  lib_dir: libxml2_fuzz/.libs/libxml2.a
+  dependencies:
+    - autoconf
+    - automake
+    - libtool
+    - pkg-config
+    - zlib1g-dev
+    - liblzma-dev
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer
+    SRC: ./libxml2_fuzz
+    OUT: ./libxml2_fuzz
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+  build_library:
+    - ./autogen.sh --enable-static --disable-shared --with-zlib --with-lzma --without-debug --without-http --without-python
+    - make -j$(nproc) clean
+    - make -j$(nproc) libxml2.la
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/include {harness_path} -o {output} {lib_base}/.libs/libxml2.a -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
+
+libxml2_cov:
+  repo_url: https://gitlab.gnome.org/GNOME/libxml2.git
+  branch: 22f9d730898d2dfcc03a484e65e1f8fc3675225f
+  build_dir: ./libxml2_cov
+  lib_dir: libxml2_cov/.libs/libxml2.a
+  dependencies:
+    - autoconf
+    - automake
+    - libtool
+    - pkg-config
+    - zlib1g-dev
+    - liblzma-dev
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libxml2_cov
+    OUT: ./libxml2_cov
+  build_library:
+    - ./autogen.sh --enable-static --disable-shared --with-zlib --with-lzma --without-debug --without-http --without-python
+    - make -j$(nproc) clean
+    - make -j$(nproc) libxml2.la
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/include {harness_path} -o {output} -Wl,--whole-archive {lib_base}/.libs/libxml2.a -Wl,--no-whole-archive -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
+
+# ------------------------------------------------------------------------------------------------
+# assimp
+assimp_api:
+  repo_url: https://github.com/assimp/assimp.git
+  branch: v5.3.1
+  build_dir: ./assimp_api
+  lib_dir: assimp_api/bin/libassimp.so
+  include_dir:
+    - "{lib_base}/include/"
+    - "{lib_base}/code/"
+    - "{lib_base}/contrib/"
+  dependencies:
+    - cmake
+    - ninja-build
+  env:
+    CC: clang
+    CXX: clang++
+    # CFLAGS: -O0 -g -fno-omit-frame-pointer -fvisibility=hidden -ffunction-sections -fdata-sections
+    # CXXFLAGS: -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fvisibility=hidden -fvisibility-inlines-hidden -ffunction-sections -fdata-sections
+    # LDFLAGS: -O0 -g -fno-omit-frame-pointer -Wl,--gc-sections -Wl,--exclude-libs,ALL
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./assimp_api
+    OUT: ./assimp_api
+  build_library:
+    - cmake CMakeLists.txt -G "Ninja" -DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIB=ON -DASSIMP_BUILD_ZLIB=ON -DASSIMP_BUILD_TESTS=OFF -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF -DASSIMP_BUILD_DOCS=ON
+    - cmake --build . --target assimp
+    - cmake --build . --target docs
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/bin/libassimp.so -Wl,-rpath={lib_base}/bin {lib_base}/contrib/zlib/libzlibstatic.a
+
+assimp_fuzz:
+  repo_url: https://github.com/assimp/assimp.git
+  branch: v5.3.1
+  build_dir: ./assimp_fuzz
+  lib_dir: assimp_fuzz/lib/libassimp.a
+  dependencies:
+    - cmake
+    - ninja-build
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./assimp_fuzz
+    OUT: ./assimp_fuzz
+  build_library:
+    - cmake CMakeLists.txt -G "Ninja" -DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_ZLIB=ON -DASSIMP_BUILD_TESTS=OFF -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF
+    - cmake --build . --target assimp
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/lib/libassimp.a {lib_base}/contrib/zlib/libzlibstatic.a
+
+assimp_cov:
+  repo_url: https://github.com/assimp/assimp.git
+  branch: v5.3.1
+  build_dir: ./assimp_cov
+  lib_dir: assimp_cov/lib/libassimp.a
+  dependencies:
+    - cmake
+    - ninja-build
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./assimp_cov
+    OUT: ./assimp_cov
+  build_library:
+    - cmake CMakeLists.txt -G "Ninja" -DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_ZLIB=ON -DASSIMP_BUILD_TESTS=OFF -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF
+    - cmake --build . --target assimp
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} -Wl,--whole-archive {lib_base}/lib/libassimp.a -Wl,--no-whole-archive {lib_base}/contrib/zlib/libzlibstatic.a
+
+# ------------------------------------------------------------------------------------------------
+# libjpeg-turbo
+libjpeg-turbo_api:
+  repo_url: https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  branch: 0b742742c873025e2a127918d4969238ace7ae5b
+  build_dir: ./libjpeg-turbo_api
+  lib_dir: libjpeg-turbo_api/libturbojpeg.so
+  dependencies:
+    - cmake
+    - nasm
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libjpeg-turbo_api
+    OUT: ./libjpeg-turbo_api
+  build_library:
+    - cmake . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_STATIC=0 -DENABLE_SHARED=1
+    - make -j$(nproc) turbojpeg
+    - make -j$(nproc) tjdoc
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/src {harness_path} -o {output} {lib_base}/libturbojpeg.so -Wl,-rpath={lib_base}
+
+libjpeg-turbo_fuzz:
+  repo_url: https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  branch: 0b742742c873025e2a127918d4969238ace7ae5b
+  build_dir: ./libjpeg-turbo_fuzz
+  lib_dir: libjpeg-turbo_fuzz/libturbojpeg.a
+  dependencies:
+    - cmake
+    - nasm
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libjpeg-turbo_fuzz
+    OUT: ./libjpeg-turbo_fuzz
+  build_library:
+    - cmake . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_STATIC=1 -DENABLE_SHARED=0
+    - make -j$(nproc) turbojpeg-static
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/src {harness_path} -o {output} {lib_base}/libturbojpeg.a
+
+libjpeg-turbo_cov:
+  repo_url: https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  branch: 0b742742c873025e2a127918d4969238ace7ae5b
+  build_dir: ./libjpeg-turbo_cov
+  lib_dir: libjpeg-turbo_cov/libturbojpeg.a
+  dependencies:
+    - cmake
+    - nasm
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libjpeg-turbo_cov
+    OUT: ./libjpeg-turbo_cov
+  build_library:
+    - cmake . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_STATIC=1 -DENABLE_SHARED=0 -DCMAKE_INSTALL_PREFIX=$WORK
+    - make -j$(nproc) turbojpeg-static
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/src {harness_path} -o {output} -Wl,--whole-archive {lib_base}/libturbojpeg.a -Wl,--no-whole-archive
+# ------------------------------------------------------------------------------------------------
+# libtiff
+libtiff_api:
+  repo_url: https://gitlab.com/libtiff/libtiff.git
+  branch: b937f8d1142789c24094f7d4f1db70a9625b62a1
+  build_dir: ./libtiff_api
+  lib_dir: libtiff_api/lib/libtiff.so
+  include_dir:
+    - "{lib_base}/include"
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - cmake
+    - nasm
+    - liblzma-dev
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libtiff_api
+    OUT: ./libtiff_api
+  build_library:
+    - git clone https://github.com/madler/zlib.git
+    - git clone https://github.com/libjpeg-turbo/libjpeg-turbo
+    - git clone https://www.cl.cam.ac.uk/~mgk25/git/jbigkit
+    - cd zlib
+    - ./configure --prefix="../"
+    - make -j$(nproc) libz.a
+    - make install
+    - cd ..
+    - cd libjpeg-turbo
+    - cmake . -DCMAKE_INSTALL_PREFIX="../" -DENABLE_STATIC=1 -DENABLE_SHARED=0
+    - make -j$(nproc) jpeg-static
+    - make install
+    - cd ..
+    - cd jbigkit
+    - CFLAGS="-O2 -g" LDFLAGS="" make lib
+    - mkdir -p ../include
+    - mv libjbig/*.a ../lib/
+    - mv libjbig/*.h ../include/
+    - cd ..
+    - cmake . -DCMAKE_INSTALL_PREFIX="$(pwd)" -DBUILD_SHARED_LIBS=on -Dtiff-tools=OFF -Dtiff-tests=OFF -Dtiff-contrib=OFF
+    - make -j$(nproc) tiff tiffxx doc-html
+    - make install
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/lib/libtiffxx.so {lib_base}/lib/libtiff.so -Wl,-rpath={lib_base}/lib {lib_base}/lib/libz.a {lib_base}/lib/libjpeg.a {lib_base}/lib/libjbig.a {lib_base}/lib/libjbig85.a -Wl,-Bstatic -llzma -Wl,-Bdynamic
+
+libtiff_fuzz:
+  repo_url: https://gitlab.com/libtiff/libtiff.git
+  branch: b937f8d1142789c24094f7d4f1db70a9625b62a1
+  build_dir: ./libtiff_fuzz
+  lib_dir: libtiff_fuzz/lib/libtiff.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - cmake
+    - nasm
+    - liblzma-dev
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libtiff_fuzz
+    OUT: ./libtiff_fuzz
+  build_library:
+    - git clone https://github.com/madler/zlib.git
+    - git clone https://github.com/libjpeg-turbo/libjpeg-turbo
+    - git clone https://www.cl.cam.ac.uk/~mgk25/git/jbigkit
+    - cd zlib
+    - ./configure --prefix="../"
+    - make -j$(nproc) libz.a
+    - make install
+    - cd ..
+    - cd libjpeg-turbo
+    - cmake . -DCMAKE_INSTALL_PREFIX="../" -DENABLE_STATIC=1 -DENABLE_SHARED=0
+    - make -j$(nproc) jpeg-static
+    - make install
+    - cd ..
+    - cd jbigkit
+    - CFLAGS="-O2 -g" LDFLAGS="" make lib
+    - mkdir -p ../include
+    - mv libjbig/*.a ../lib/
+    - mv libjbig/*.h ../include/
+    - cd ..
+    - cmake . -DCMAKE_INSTALL_PREFIX="$(pwd)" -DBUILD_SHARED_LIBS=off -Dtiff-tools=OFF -Dtiff-tests=OFF -Dtiff-contrib=OFF -Dtiff-docs=OFF
+    - make -j$(nproc) tiff tiffxx
+    - make install
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/lib/libtiffxx.a {lib_base}/lib/libtiff.a {lib_base}/lib/libz.a {lib_base}/lib/libjpeg.a {lib_base}/lib/libjbig.a {lib_base}/lib/libjbig85.a -Wl,-Bstatic -llzma -Wl,-Bdynamic
+
+libtiff_cov:
+  repo_url: https://gitlab.com/libtiff/libtiff.git
+  branch: b937f8d1142789c24094f7d4f1db70a9625b62a1
+  build_dir: ./libtiff_cov
+  lib_dir: libtiff_cov/lib/libtiff.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - cmake
+    - nasm
+    - liblzma-dev
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libtiff_cov
+    OUT: ./libtiff_cov
+  build_library:
+    - git clone https://github.com/madler/zlib.git
+    - git clone https://github.com/libjpeg-turbo/libjpeg-turbo
+    - git clone https://www.cl.cam.ac.uk/~mgk25/git/jbigkit
+    - cd zlib
+    - ./configure --prefix="../"
+    - make -j$(nproc) libz.a
+    - make install
+    - cd ..
+    - cd libjpeg-turbo
+    - cmake . -DCMAKE_INSTALL_PREFIX="../" -DENABLE_STATIC=1 -DENABLE_SHARED=0
+    - make -j$(nproc) jpeg-static
+    - make install
+    - cd ..
+    - cd jbigkit
+    - CFLAGS="-O2 -g" LDFLAGS="" make lib
+    - mkdir -p ../include
+    - mv libjbig/*.a ../lib/
+    - mv libjbig/*.h ../include/
+    - cd ..
+    - cmake . -DCMAKE_INSTALL_PREFIX="$(pwd)" -DBUILD_SHARED_LIBS=off -Dtiff-tools=OFF -Dtiff-tests=OFF -Dtiff-contrib=OFF -Dtiff-docs=OFF
+    - make -j$(nproc) tiff tiffxx
+    - make install
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} -Wl,--whole-archive {lib_base}/lib/libtiffxx.a {lib_base}/lib/libtiff.a -Wl,--no-whole-archive {lib_base}/lib/libz.a {lib_base}/lib/libjpeg.a {lib_base}/lib/libjbig.a {lib_base}/lib/libjbig85.a -Wl,-Bstatic -llzma -Wl,-Bdynamic
+# ------------------------------------------------------------------------------------------------
+# libaom
+libaom_api:
+  repo_url: https://aomedia.googlesource.com/aom
+  # branch: d7f8c2fbafa212880c987fc2be1f51d326144560
+  branch: 06918fc0e252bf7af787f2e738e234c26437628e
+  build_dir: ./libaom_api
+  lib_dir: libaom_api/lib/libaom.so
+  include_dir:
+    - "{lib_base}"
+    - "{lib_base}/lib"
+  dependencies:
+    - cmake
+    - yasm
+    - wget
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libaom_api
+    OUT: ./libaom_api
+  build_library:
+    - mkdir -p lib
+    - cd lib
+    - cmake .. -DBUILD_SHARED_LIBS=ON -DSANITIZE=address -DAOM_MAX_ALLOCABLE_MEMORY=1073741824 -DDO_RANGE_CHECK_CLAMP=1 -DAOM_TARGET_CPU=generic -DCONFIG_LOWBITDEPTH=1 -DENABLE_EXAMPLES=0 -DENABLE_DOCS=1 -DENABLE_TESTS=0 -DCONFIG_SIZE_LIMIT=1 -DDECODE_HEIGHT_LIMIT=12288 -DDECODE_WIDTH_LIMIT=12288 -DENABLE_TOOLS=0
+    - make -j$(nproc) aom docs
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/lib {harness_path} -o {output} {lib_base}/lib/libaom.so -Wl,-rpath={lib_base}/lib
+
+libaom_fuzz:
+  repo_url: https://aomedia.googlesource.com/aom
+  # branch: d7f8c2fbafa212880c987fc2be1f51d326144560
+  branch: 06918fc0e252bf7af787f2e738e234c26437628e
+  build_dir: ./libaom_fuzz
+  lib_dir: libaom_fuzz/lib/libaom.a
+  dependencies:
+    - cmake
+    - yasm
+    - wget
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libaom_fuzz
+    OUT: ./libaom_fuzz
+  build_library:
+    - mkdir -p lib
+    - cd lib
+    - cmake .. -DAOM_MAX_ALLOCABLE_MEMORY=1073741824 -DDO_RANGE_CHECK_CLAMP=1 -DAOM_TARGET_CPU=generic -DCONFIG_LOWBITDEPTH=1 -DENABLE_EXAMPLES=0 -DENABLE_DOCS=0 -DENABLE_TESTS=0 -DCONFIG_SIZE_LIMIT=1 -DDECODE_HEIGHT_LIMIT=12288 -DDECODE_WIDTH_LIMIT=12288 -DENABLE_TOOLS=0
+    - make -j$(nproc) aom
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/lib {harness_path} -o {output} {lib_base}/lib/libaom.a
+
+libaom_cov:
+  repo_url: https://aomedia.googlesource.com/aom
+  # branch: d7f8c2fbafa212880c987fc2be1f51d326144560
+  branch: 06918fc0e252bf7af787f2e738e234c26437628e
+  build_dir: ./libaom_cov
+  lib_dir: libaom_cov/lib/libaom.a
+  dependencies:
+    - cmake
+    - yasm
+    - wget
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libaom_cov
+    OUT: ./libaom_cov
+  build_library:
+    - mkdir -p lib
+    - cd lib
+    - cmake .. -DBUILD_SHARED_LIBS=OFF -DAOM_MAX_ALLOCABLE_MEMORY=1073741824 -DDO_RANGE_CHECK_CLAMP=1 -DAOM_TARGET_CPU=generic -DCONFIG_LOWBITDEPTH=1 -DENABLE_EXAMPLES=0 -DENABLE_DOCS=0 -DENABLE_TESTS=0 -DCONFIG_SIZE_LIMIT=1 -DDECODE_HEIGHT_LIMIT=12288 -DDECODE_WIDTH_LIMIT=12288 -DENABLE_TOOLS=0
+    - make -j$(nproc) aom
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/lib {harness_path} -o {output} -Wl,--whole-archive {lib_base}/lib/libaom.a -Wl,--no-whole-archive
+# ------------------------------------------------------------------------------------------------
+# libpcap
+libpcap_api:
+  repo_url: https://github.com/the-tcpdump-group/libpcap.git
+  branch: c15e2e79023e32d0f4ca7be43236534fc651909e
+  build_dir: ./libpcap_api
+  lib_dir: libpcap_api/libpcap.so
+  dependencies:
+    - make
+    - cmake
+    - flex
+    - bison
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libpcap_api
+    OUT: ./libpcap_api
+  build_library:
+    - cmake . -DBUILD_SHARED_LIBS=ON
+    - make pcap -j$(nproc)
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libpcap.so -Wl,-rpath={lib_base}
+libpcap_fuzz:
+  repo_url: https://github.com/the-tcpdump-group/libpcap.git
+  branch: c15e2e79023e32d0f4ca7be43236534fc651909e
+  build_dir: ./libpcap_fuzz
+  lib_dir: libpcap_fuzz/libpcap.a
+  dependencies:
+    - make
+    - cmake
+    - flex
+    - bison
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libpcap_fuzz
+    OUT: ./libpcap_fuzz
+  build_library:
+    - cmake .
+    - make pcap_static -j$(nproc)
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libpcap.a
+libpcap_cov:
+  repo_url: https://github.com/the-tcpdump-group/libpcap.git
+  branch: c15e2e79023e32d0f4ca7be43236534fc651909e
+  build_dir: ./libpcap_cov
+  lib_dir: libpcap_cov/libpcap.a
+  dependencies:
+    - make
+    - cmake
+    - flex
+    - bison
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libpcap_cov
+    OUT: ./libpcap_cov
+  build_library:
+    - cmake .
+    - make pcap_static -j$(nproc)
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} -Wl,--whole-archive {lib_base}/libpcap.a -Wl,--no-whole-archive
+
+# ------------------------------------------------------------------------------------------------
+# cjson
+cjson_api:
+  repo_url: https://github.com/DaveGamble/cJSON.git
+  branch: c859b25da02955fef659d658b8f324b5cde87be3
+  build_dir: ./cjson_api
+  lib_dir: cjson_api/libcjson.so
+  dependencies:
+    - cmake
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./cjson_api
+    OUT: ./cjson_api
+  build_library:
+    - cmake . -DBUILD_SHARED_LIBS=ON -DENABLE_CJSON_TEST=OFF
+    - make -j$(nproc) cjson
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libcjson.so -Wl,-rpath={lib_base}
+cjson_fuzz:
+  repo_url: https://github.com/DaveGamble/cJSON.git
+  branch: c859b25da02955fef659d658b8f324b5cde87be3
+  build_dir: ./cjson_fuzz
+  lib_dir: cjson_fuzz/libcjson.a
+  dependencies:
+    - cmake
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./cjson_fuzz
+    OUT: ./cjson_fuzz
+  build_library:
+    - cmake . -DBUILD_SHARED_LIBS=OFF -DENABLE_CJSON_TEST=OFF
+    - make -j$(nproc) cjson
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libcjson.a
+cjson_cov:
+  repo_url: https://github.com/DaveGamble/cJSON.git
+  branch: c859b25da02955fef659d658b8f324b5cde87be3
+  build_dir: ./cjson_cov
+  lib_dir: cjson_cov/libcjson.a
+  dependencies:
+    - cmake
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./cjson_cov
+    OUT: ./cjson_cov
+  build_library:
+    - cmake . -DBUILD_SHARED_LIBS=OFF -DENABLE_CJSON_TEST=OFF
+    - make -j$(nproc) cjson
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} -Wl,--whole-archive {lib_base}/libcjson.a -Wl,--no-whole-archive
+
+# ------------------------------------------------------------------------------------------------
+# c-ares
+c-ares_api:
+  repo_url: https://github.com/c-ares/c-ares.git
+  branch: 1d1b3d4a808dff9359cacb4539ac1b775876dcb6
+  build_dir: ./c-ares_api
+  lib_dir: c-ares_api/src/lib/.libs/libcares.so
+  include_dir:
+    - "{lib_base}/include"
+    - "{lib_base}/src/lib"
+    - "{lib_base}/src/lib/include"
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - pkg-config
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./c-ares_api
+    OUT: ./c-ares_api
+  build_library:
+    - ./buildconf
+    - ./configure --enable-debug --enable-shared
+    - make clean
+    - make -j$(nproc) -C src/lib
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include -I{lib_base}/src/lib -I{lib_base}/src/lib/include {harness_path} -o {output} {lib_base}/src/lib/.libs/libcares.so -Wl,-rpath={lib_base}/src/lib/.libs
+
+c-ares_fuzz:
+  repo_url: https://github.com/c-ares/c-ares.git
+  branch: 1d1b3d4a808dff9359cacb4539ac1b775876dcb6
+  build_dir: ./c-ares_fuzz
+  lib_dir: c-ares_fuzz/src/lib/.libs/libcares.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - pkg-config
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./c-ares_fuzz
+    OUT: ./c-ares_fuzz
+  build_library:
+    - ./buildconf
+    - ./configure --enable-debug --disable-shared
+    - make clean
+    - make -j$(nproc) -C src/lib
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include -I{lib_base}/src/lib {harness_path} -o {output} {lib_base}/src/lib/.libs/libcares.a
+
+c-ares_cov:
+  repo_url: https://github.com/c-ares/c-ares.git
+  branch: 1d1b3d4a808dff9359cacb4539ac1b775876dcb6
+  build_dir: ./c-ares_cov
+  lib_dir: c-ares_cov/src/lib/.libs/libcares.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - pkg-config
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./c-ares_cov
+    OUT: ./c-ares_cov
+  build_library:
+    - ./buildconf
+    - ./configure --enable-debug --enable-static --disable-shared
+    - make clean
+    - make -j$(nproc) -C src/lib
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include -I{lib_base}/src/lib {harness_path} -o {output} -Wl,--whole-archive {lib_base}/src/lib/.libs/libcares.a -Wl,--no-whole-archive
+
+# ------------------------------------------------------------------------------------------------
+# libmagic
+libmagic_api:
+  repo_url: https://github.com/file/file.git
+  branch: 6e3c576efe01b2666404c194f386cc81226a7659
+  build_dir: ./libmagic_api
+  lib_dir: libmagic_api/src/.libs/libmagic.so
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - shtool
+    - libbz2-dev
+    - liblzma-dev
+    - zlib1g-dev
+    - libzstd-dev
+    - liblz4-dev
+  env:
+    CC: clang
+    CXX: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libmagic_api
+    OUT: ./libmagic_api
+  build_library:
+    - sed -i 's/-no-undefined//g' src/Makefile.am
+    - autoreconf -i
+    - ./configure --disable-static --enable-shared --enable-fsect-man5
+    - make -j$(nproc) -C src magic.h libmagic.la
+    - make -j$(nproc) -C doc
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/src/ {harness_path} -o {output} {lib_base}/src/.libs/libmagic.so -Wl,-rpath={lib_base}/src/.libs -l:libz.a -l:liblz4.a -l:libbz2.a -l:liblzma.a -l:libzstd.a
+
+libmagic_fuzz:
+  repo_url: https://github.com/file/file.git
+  branch: 6e3c576efe01b2666404c194f386cc81226a7659
+  build_dir: ./libmagic_fuzz
+  lib_dir: libmagic_fuzz/src/.libs/libmagic.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - shtool
+    - libbz2-dev
+    - liblzma-dev
+    - zlib1g-dev
+    - libzstd-dev
+    - liblz4-dev
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    LD: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libmagic_fuzz
+    OUT: ./libmagic_fuzz
+  build_library:
+    - autoreconf -i
+    - ./configure --enable-static --disable-shared --enable-fsect-man5
+    - make -j$(nproc) -C src magic.h libmagic.la
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/src/ {harness_path} -o {output} {lib_base}/src/.libs/libmagic.a -l:libz.a -l:liblz4.a -l:libbz2.a -l:liblzma.a -l:libzstd.a
+
+libmagic_cov:
+  repo_url: https://github.com/file/file.git
+  branch: 6e3c576efe01b2666404c194f386cc81226a7659
+  build_dir: ./libmagic_cov
+  lib_dir: libmagic_cov/src/.libs/libmagic.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - shtool
+    - libbz2-dev
+    - liblzma-dev
+    - zlib1g-dev
+    - libzstd-dev
+    - liblz4-dev
+  env:
+    CC: clang
+    CXX: clang++
+    LD: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./libmagic_cov
+    OUT: ./libmagic_cov
+  build_library:
+    - autoreconf -i
+    - ./configure --enable-static --disable-shared --enable-fsect-man5
+    - make -j$(nproc) -C src magic.h libmagic.la
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/src/ {harness_path} -o {output} -Wl,--whole-archive {lib_base}/src/.libs/libmagic.a -Wl,--no-whole-archive -l:libz.a -l:liblz4.a -l:libbz2.a -l:liblzma.a -l:libzstd.a
+
+# ------------------------------------------------------------------------------------------------
+# sqlite3
+sqlite3_api:
+  repo_url: https://github.com/sqlite/sqlite.git
+  branch: ce43bf85fa957c7ca96182c47c55f8cc5122aa32
+  build_dir: ./sqlite3_api
+  lib_dir: sqlite3_api/libsqlite3.so
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - curl
+    - tcl
+    - zlib1g-dev
+    - tcl-dev
+  env:
+    CC: clang
+    CXX: clang++
+    LD: clang++
+    CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC -DSQLITE_MAX_LENGTH=128000000 -DSQLITE_MAX_SQL_LENGTH=128000000 -DSQLITE_MAX_MEMORY=25000000 -DSQLITE_PRINTF_PRECISION_LIMIT=1048576 -DSQLITE_DEBUG=1 -DSQLITE_MAX_PAGE_COUNT=16384
+    CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC -DSQLITE_MAX_LENGTH=128000000 -DSQLITE_MAX_SQL_LENGTH=128000000 -DSQLITE_MAX_MEMORY=25000000 -DSQLITE_PRINTF_PRECISION_LIMIT=1048576 -DSQLITE_DEBUG=1 -DSQLITE_MAX_PAGE_COUNT=16384
+    LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./sqlite3_api
+    OUT: ./sqlite3_api
+  build_library:
+    - ./configure --shared=1
+    - make -j$(nproc) lib so
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libsqlite3.so -Wl,-rpath={lib_base}
+sqlite3_fuzz:
+  repo_url: https://github.com/sqlite/sqlite.git
+  branch: ce43bf85fa957c7ca96182c47c55f8cc5122aa32
+  build_dir: ./sqlite3_fuzz
+  lib_dir: sqlite3_fuzz/libsqlite3.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - curl
+    - tcl
+    - zlib1g-dev
+    - tcl-dev
+  env:
+    CC: afl-clang-lto
+    CXX: afl-clang-lto++
+    LD: afl-clang-lto++
+    CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC -DSQLITE_MAX_LENGTH=128000000 -DSQLITE_MAX_SQL_LENGTH=128000000 -DSQLITE_MAX_MEMORY=25000000 -DSQLITE_PRINTF_PRECISION_LIMIT=1048576 -DSQLITE_DEBUG=1 -DSQLITE_MAX_PAGE_COUNT=16384
+    CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC -DSQLITE_MAX_LENGTH=128000000 -DSQLITE_MAX_SQL_LENGTH=128000000 -DSQLITE_MAX_MEMORY=25000000 -DSQLITE_PRINTF_PRECISION_LIMIT=1048576 -DSQLITE_DEBUG=1 -DSQLITE_MAX_PAGE_COUNT=16384
+    LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./sqlite3_fuzz
+    OUT: ./sqlite3_fuzz
+  build_library:
+    - ./configure --shared=0
+    - make -j$(nproc) lib
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libsqlite3.a
+sqlite3_cov:
+  repo_url: https://github.com/sqlite/sqlite.git
+  branch: ce43bf85fa957c7ca96182c47c55f8cc5122aa32
+  build_dir: ./sqlite3_cov
+  lib_dir: sqlite3_cov/libsqlite3.a
+  dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - curl
+    - tcl
+    - zlib1g-dev
+    - tcl-dev
+  env:
+    CC: clang
+    CXX: clang++
+    LD: clang++
+    CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2 -DSQLITE_MAX_LENGTH=128000000 -DSQLITE_MAX_SQL_LENGTH=128000000 -DSQLITE_MAX_MEMORY=25000000 -DSQLITE_PRINTF_PRECISION_LIMIT=1048576 -DSQLITE_DEBUG=1 -DSQLITE_MAX_PAGE_COUNT=16384
+    CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2 -DSQLITE_MAX_LENGTH=128000000 -DSQLITE_MAX_SQL_LENGTH=128000000 -DSQLITE_MAX_MEMORY=25000000 -DSQLITE_PRINTF_PRECISION_LIMIT=1048576 -DSQLITE_DEBUG=1 -DSQLITE_MAX_PAGE_COUNT=16384
+    LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+    LIBFUZZER_LINK: -fsanitize=fuzzer
+    SRC: ./sqlite3_cov
+    OUT: ./sqlite3_cov
+  build_library:
+    - ./configure --shared=0
+    - make -j$(nproc) lib
+  build_harness:
+    - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} -Wl,--whole-archive {lib_base}/libsqlite3.a -Wl,--no-whole-archive
+# ------------------------------------------------------------------------------------------------
+# zlib
+zlib_api:
+    repo_url: https://github.com/madler/zlib.git
+    branch: f9dd6009be3ed32415edf1e89d1bc38380ecb95d
+    build_dir: ./zlib_api
+    lib_dir: zlib_api/libz.so
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    env:
+        CC: clang
+        CXX: clang++
+        LD: clang++
+        CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./zlib_api
+        OUT: ./zlib_api
+    build_library:
+        - ./configure
+        - make -j$(nproc) clean
+        - make -j$(nproc) all
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libz.so -Wl,-rpath={lib_base}
+
+zlib_fuzz:
+    repo_url: https://github.com/madler/zlib.git
+    branch: f9dd6009be3ed32415edf1e89d1bc38380ecb95d
+    build_dir: ./zlib_fuzz
+    lib_dir: zlib_fuzz/libz.a
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    env:
+        CC: afl-clang-lto
+        CXX: afl-clang-lto++
+        LD: afl-clang-lto++
+        CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./zlib_fuzz
+        OUT: ./zlib_fuzz
+    build_library:
+        - ./configure
+        - make -j$(nproc) clean
+        - make -j$(nproc) all
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} {harness_path} -o {output} {lib_base}/libz.a
+
+zlib_cov:
+    repo_url: https://github.com/madler/zlib.git
+    branch: f9dd6009be3ed32415edf1e89d1bc38380ecb95d
+    build_dir: ./zlib_cov
+    lib_dir: zlib_cov/libz.a
+    dependencies:
+    - make
+    env:
+        CC: clang
+        CXX: clang++
+        LD: clang++
+        CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+        CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+        LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./zlib_cov
+        OUT: ./zlib_cov
+    build_library:
+        - ./configure
+        - make clean
+        - make -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/libz.a
+# ------------------------------------------------------------------------------------------------
+# lcms
+lcms_api:
+    repo_url: https://github.com/mm2/Little-CMS.git
+    branch: 76ffc49448b8bd6aa6a36c1f5869ab318831abb9
+    build_dir: ./lcms_api
+    lib_dir: lcms_api/src/.libs/liblcms2.so
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    include_dir:
+        - "{lib_base}/include"
+        - "{lib_base}/src"
+    env:
+        CC: clang
+        CXX: clang++
+        CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./lcms_api
+        OUT: ./lcms_api
+    build_library:
+        - ./configure --enable-shared --disable-static
+        - make -j$(nproc) -C src
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/src/.libs/liblcms2.so -Wl,-rpath={lib_base}/src/.libs
+lcms_fuzz:
+    repo_url: https://github.com/mm2/Little-CMS.git
+    branch: 76ffc49448b8bd6aa6a36c1f5869ab318831abb9
+    build_dir: lcms_fuzz
+    lib_dir: lcms_fuzz/src/.libs/liblcms2.a
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    include_dir:
+        - "{lib_base}/include"
+        - "{lib_base}/src"
+    env:
+        CC: afl-clang-lto
+        CXX: afl-clang-lto++
+        CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./lcms_fuzz
+        OUT: ./lcms_fuzz
+    build_library:
+        - ./configure --disable-shared --enable-static
+        - make -j$(nproc) -C src
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/src/.libs/liblcms2.a
+lcms_cov:
+    repo_url: https://github.com/mm2/Little-CMS.git
+    branch: 76ffc49448b8bd6aa6a36c1f5869ab318831abb9
+    build_dir: lcms_cov
+    lib_dir: lcms_cov/src/.libs/liblcms2.a
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    include_dir:
+        - "{lib_base}/include"
+        - "{lib_base}/src"
+    env:
+        CC: clang
+        CXX: clang++
+        CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+        CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+        LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./lcms_cov
+        OUT: ./lcms_cov
+    build_library:
+        - ./configure --disable-shared --enable-static
+        - make -j$(nproc) -C src
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/src/.libs/liblcms2.a
+
+# ------------------------------------------------------------------------------------------------
+# curl
+curl_api:
+    repo_url: https://github.com/curl/curl.git
+    branch: 240408a725429b021d0e7785d12f06a20fc019e8
+    build_dir: ./curl_api
+    lib_dir: curl_api/build/lib/libcurl.so
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - libgmp-dev
+    - libssl-dev
+    - zlib1g-dev
+    - pkg-config
+    - wget
+    - cmake
+    - ninja-build
+    - groff-base
+    - libpsl-dev
+    - libidn2-dev
+    - libldap2-dev
+    - libnghttp2-dev
+    - libbrotli-dev
+    - libzstd-dev
+    - libssh2-1-dev
+    env:
+        CC: clang
+        CXX: clang++
+        LD: clang++
+        CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./curl_api
+        OUT: ./curl_api
+    build_library:
+        - cmake -B build -DBUILD_SHARED_LIBS=ON -DCURL_USE_OPENSSL=ON
+        - cmake --build build -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/build/lib/libcurl.so -Wl,-rpath={lib_base}/build/lib -L/usr/lib/x86_64-linux-gnu -lssl -lcrypto -lz -lldap -llber -lidn2 -lnghttp2 -lbrotlidec -lzstd -lpsl -lssh2
+curl_fuzz:
+    repo_url: https://github.com/curl/curl.git
+    branch: 240408a725429b021d0e7785d12f06a20fc019e8
+    build_dir: ./curl_fuzz
+    lib_dir: curl_fuzz/build/lib/libcurl.a
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - libgmp-dev
+    - libssl-dev
+    - zlib1g-dev
+    - pkg-config
+    - wget
+    - cmake
+    - ninja-build
+    - groff-base
+    - libpsl-dev
+    - libidn2-dev
+    - libldap2-dev
+    - libnghttp2-dev
+    - libbrotli-dev
+    - libzstd-dev
+    - libssh2-1-dev
+    env:
+        CC: afl-clang-lto
+        CXX: afl-clang-lto++
+        LD: afl-clang-lto++
+        CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./curl_fuzz
+        OUT: ./curl_fuzz
+    build_library:
+        - cmake -B build -DBUILD_SHARED_LIBS=OFF -DCURL_USE_OPENSSL=ON
+        - cmake --build build -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/build/lib/libcurl.a -L/usr/lib/x86_64-linux-gnu -lssl -lcrypto -lz -lldap -llber -lidn2 -lnghttp2 -lbrotlidec -lzstd -lpsl -lssh2
+curl_cov:
+    repo_url: https://github.com/curl/curl.git
+    branch: 240408a725429b021d0e7785d12f06a20fc019e8
+    build_dir: ./curl_cov
+    lib_dir: curl_cov/build/lib/libcurl.a
+    dependencies:
+    - make
+    - autoconf
+    - automake
+    - libtool
+    - libgmp-dev
+    - libssl-dev
+    - zlib1g-dev
+    - pkg-config
+    - wget
+    - cmake
+    - ninja-build
+    - groff-base
+    - libpsl-dev
+    - libidn2-dev
+    - libldap2-dev
+    - libnghttp2-dev
+    - libbrotli-dev
+    - libzstd-dev
+    - libssh2-1-dev
+    env:
+        CC: clang
+        CXX: clang++
+        LD: clang++
+        CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+        CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2
+        LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./curl_cov
+        OUT: ./curl_cov
+    build_library:
+        - cmake -B build -DBUILD_SHARED_LIBS=OFF -DCURL_USE_OPENSSL=ON
+        - cmake --build build -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base}/include {harness_path} -o {output} {lib_base}/build/lib/libcurl.a -L/usr/lib/x86_64-linux-gnu -lssl -lcrypto -lz -lldap -llber -lidn2 -lnghttp2 -lbrotlidec -lzstd -lpsl -lssh2
+
+# ------------------------------------------------------------------------------------------------
+# re2
+re2_api:
+    repo_url: https://github.com/google/re2.git
+    branch: 972a15cedd008d846f1a39b2e88ce48d7f166cbd
+    build_dir: ./re2_api
+    lib_dir: re2_api/obj/so/libre2.so
+    dependencies:
+      - cmake 
+      - make 
+      - pkg-config
+    env:
+        CC: clang
+        CXX: clang++
+        LD: clang++
+        CFLAGS: -fsanitize=address -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -DNDEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -DNDEBUG -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./re2_api
+        OUT: ./re2_api
+    build_library:
+        - git clone --depth=1 https://github.com/abseil/abseil-cpp
+        - cd abseil-cpp
+        - mkdir -p build
+        - cd build
+        - cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
+        - make -j$(nproc)
+        - make install
+        - ldconfig
+        - cd ../..
+        - rm -rf abseil-cpp
+        - make -j$(nproc) obj/so/libre2.so
+        - make common-install
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++17 -I{lib_base} {harness_path} -o {output} {lib_base}/obj/so/libre2.so -Wl,-rpath={lib_base}/obj/so $(pkg-config re2 --libs | sed -e 's/-lre2//')
+re2_fuzz:
+    repo_url: https://github.com/google/re2.git
+    branch: 972a15cedd008d846f1a39b2e88ce48d7f166cbd
+    build_dir: ./re2_fuzz
+    lib_dir: re2_fuzz/obj/libre2.a
+    dependencies:
+      - cmake 
+      - make 
+      - pkg-config
+    env:
+        CC: afl-clang-lto
+        CXX: afl-clang-lto++
+        LD: afl-clang-lto++
+        CFLAGS: -fsanitize=address -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -DNDEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -DNDEBUG -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./re2_fuzz
+        OUT: ./re2_fuzz
+    build_library:
+        - git clone --depth=1 https://github.com/abseil/abseil-cpp
+        - cd abseil-cpp
+        - mkdir -p build
+        - cd build
+        - cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
+        - make -j$(nproc)
+        - make install
+        - ldconfig
+        - cd ../..
+        - rm -rf abseil-cpp
+        - make -j$(nproc) obj/libre2.a
+        - make common-install
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++17 -I{lib_base} {harness_path} -o {output} {lib_base}/obj/libre2.a $(pkg-config re2 --libs | sed -e 's/-lre2//')
+re2_cov:
+    repo_url: https://github.com/google/re2.git
+    branch: 972a15cedd008d846f1a39b2e88ce48d7f166cbd
+    build_dir: ./re2_cov
+    lib_dir: re2_cov/obj/libre2.a
+    dependencies:
+      - cmake 
+      - make 
+      - pkg-config
+    env:
+        CC: clang
+        CXX: clang++
+        LD: clang++
+        CFLAGS: -fprofile-instr-generate -fcoverage-mapping -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -DNDEBUG -g -O2
+        CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION -DNDEBUG -D_GLIBCXX_DEBUG -g -O2
+        LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./re2_cov
+        OUT: ./re2_cov
+    build_library:
+        - git clone --depth=1 https://github.com/abseil/abseil-cpp
+        - cd abseil-cpp
+        - mkdir -p build
+        - cd build
+        - cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
+        - make -j$(nproc)
+        - make install
+        - ldconfig
+        - cd ../..
+        - rm -rf abseil-cpp
+        - make -j$(nproc) obj/libre2.a
+        - make common-install
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++17 -I{lib_base} {harness_path} -o {output} {lib_base}/obj/libre2.a $(pkg-config re2 --libs | sed -e 's/-lre2//')
+
+# ------------------------------------------------------------------------------------------------
+# liblouis
+liblouis_api:
+    repo_url: https://github.com/liblouis/liblouis.git
+    branch: a11c725ac921cf5ecd3999c8ef8741625c190366
+    build_dir: ./liblouis_api
+    lib_dir: liblouis_api/liblouis/.libs/liblouis.so
+    dependencies:
+      - make
+      - autoconf
+      - automake
+      - libtool
+      - pkg-config
+      - zlib1g-dev
+      - libpci-dev
+    env:
+        CC: clang
+        CXX: clang++
+        CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./liblouis_api
+        OUT: ./liblouis_api
+    build_library:
+        - ./autogen.sh
+        - ./configure --enable-shared --disable-static
+        - make -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/liblouis {harness_path} -o {output} {lib_base}/liblouis/.libs/liblouis.so -Wl,-rpath,{lib_base}/liblouis/.libs
+liblouis_fuzz:
+    repo_url: https://github.com/liblouis/liblouis.git
+    branch: a11c725ac921cf5ecd3999c8ef8741625c190366
+    build_dir: ./liblouis_fuzz
+    lib_dir: liblouis_fuzz/liblouis/.libs/liblouis.a
+    dependencies:
+      - make
+      - autoconf
+      - automake
+      - libtool
+      - pkg-config
+      - zlib1g-dev
+      - libpci-dev
+    env:
+        CC: afl-clang-lto
+        CXX: afl-clang-lto++
+        CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./liblouis_fuzz
+        OUT: ./liblouis_fuzz
+    build_library:
+        - ./autogen.sh
+        - ./configure --enable-static --disable-shared
+        - make -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/liblouis {harness_path} -o {output} {lib_base}/liblouis/.libs/liblouis.a
+liblouis_cov:
+    repo_url: https://github.com/liblouis/liblouis.git
+    branch: a11c725ac921cf5ecd3999c8ef8741625c190366
+    build_dir: ./liblouis_cov
+    lib_dir: liblouis_cov/liblouis/.libs/liblouis.a
+    dependencies:
+      - make
+      - autoconf
+      - automake
+      - libtool
+      - pkg-config
+      - zlib1g-dev
+      - libpci-dev
+    env:
+        CC: clang
+        CXX: clang++
+        CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2 -fPIC
+        CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2 -fPIC
+        LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2 -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./liblouis_cov
+        OUT: ./liblouis_cov
+    build_library:
+        - ./autogen.sh
+        - ./configure --enable-static --disable-shared
+        - make -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++11 -I{lib_base} -I{lib_base}/liblouis {harness_path} -o {output} {lib_base}/liblouis/.libs/liblouis.a
+
+
+# ------------------------------------------------------------------------------------------------
+# libvpx
+libvpx_api:
+    repo_url: https://chromium.googlesource.com/webm/libvpx
+    branch: 9794f877a3e380ecd57b735b81fe94ab368f6748
+    build_dir: ./libvpx_api
+    lib_dir: libvpx_api/libvpx.so
+    dependencies:
+      - yasm
+      - wget
+      - gcc
+    env:
+        CC: clang
+        CXX: clang++
+        CFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./libvpx_api
+        OUT: ./libvpx_api
+    build_library:
+        - ./configure --disable-unit-tests --disable-examples --disable-tools --enable-pic --disable-static --enable-shared --size-limit=12288x12288 --enable-postproc --enable-vp9-postproc --enable-vp9-highbitdepth --enable-error-concealment --enable-runtime-cpu-detect --enable-better-hw-compatibility --enable-vp9-temporal-denoising --extra-cflags="-DVPX_MAX_ALLOCABLE_MEMORY=1073741824"
+        - make -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++17 -I{lib_base} {harness_path} -o {output} {lib_base}/libvpx.so -Wl,-rpath,{lib_base} -lpthread -lm
+libvpx_fuzz:
+    repo_url: https://chromium.googlesource.com/webm/libvpx
+    branch: 9794f877a3e380ecd57b735b81fe94ab368f6748
+    build_dir: ./libvpx_fuzz
+    lib_dir: libvpx_fuzz/libvpx.a
+    dependencies:
+      - yasm
+      - wget
+      - gcc
+    env:
+        CC: afl-clang-lto
+        CXX: afl-clang-lto++
+        CFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        CXXFLAGS: -fsanitize=address,fuzzer-no-link -D_GLIBCXX_DEBUG -O0 -g -fno-omit-frame-pointer -fPIC
+        LDFLAGS: -fsanitize=address,fuzzer-no-link -O0 -g -fno-omit-frame-pointer -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./libvpx_fuzz
+        OUT: ./libvpx_fuzz
+    build_library:
+        - ./configure --disable-unit-tests --disable-examples --disable-tools --disable-docs --enable-pic --disable-shared --enable-static --size-limit=12288x12288 --enable-postproc --enable-vp9-postproc --enable-vp9-highbitdepth --enable-error-concealment --enable-runtime-cpu-detect --enable-better-hw-compatibility --enable-vp9-temporal-denoising --extra-cflags="-DVPX_MAX_ALLOCABLE_MEMORY=1073741824"
+        - make -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++17 -I{lib_base} {harness_path} -o {output} -Wl,--start-group {lib_base}/libvpx.a -Wl,--end-group -lpthread -lm
+libvpx_cov:
+    repo_url: https://chromium.googlesource.com/webm/libvpx
+    branch: 9794f877a3e380ecd57b735b81fe94ab368f6748
+    build_dir: ./libvpx_cov
+    lib_dir: libvpx_cov/libvpx.a
+    dependencies:
+      - yasm
+      - wget
+      - gcc
+    env:
+        CC: clang
+        CXX: clang++
+        CFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2 -fPIC
+        CXXFLAGS: -fprofile-instr-generate -fcoverage-mapping -D_GLIBCXX_DEBUG -g -O2 -fPIC
+        LDFLAGS: -fprofile-instr-generate -fcoverage-mapping -g -O2 -fPIC
+        LIBFUZZER_LINK: -fsanitize=fuzzer
+        SRC: ./libvpx_cov
+        OUT: ./libvpx_cov
+    build_library:
+        - ./configure --disable-unit-tests --disable-examples --disable-tools --disable-docs --enable-pic --disable-shared --enable-static --size-limit=12288x12288 --enable-postproc --enable-vp9-postproc --enable-vp9-highbitdepth --enable-error-concealment --enable-runtime-cpu-detect --enable-better-hw-compatibility --enable-vp9-temporal-denoising --extra-cflags="-DVPX_MAX_ALLOCABLE_MEMORY=1073741824"
+        - make -j$(nproc)
+    build_harness:
+        - $CXX $CXXFLAGS $LIBFUZZER_LINK -std=c++17 -I{lib_base} {harness_path} -o {output} -Wl,--start-group {lib_base}/libvpx.a -Wl,--end-group -lpthread -lm

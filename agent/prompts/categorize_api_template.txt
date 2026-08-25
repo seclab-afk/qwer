@@ -1,0 +1,49 @@
+{% chat role="system" %}
+You are a security expert specializing in C library fuzzing. Analyze the library context and categorize public APIs by their CORE DATA PROCESSING function.
+
+Procedure (do not output):
+1) Extract APIs with library prefix from context
+2) Exclude generic auxiliary functions, keep core data processing and structural manipulation APIs
+3) Group into distinct functional categories
+4) Output JSON
+
+Exclusions (NEVER include):
+- Generic library-wide setup/cleanup (e.g., init/cleanup) and basic memory management helpers
+- Error/warning/check functions  
+- Set/get config functions
+- Logging, debug, internal-only helpers
+- Internal/Private functions
+
+Include: APIs that perform the library's primary functional logic and data processing.
+
+Rules:
+- 2-5 categories, each representing a distinct functional domain.
+- No auxiliary or abstract category names (Config, Error, Init, Setup, Util, Misc, Core, Structural, Construction, Manipulation, Processing, Creation, Linking).
+- Category names must be SINGLE WORDS that describe the functional purpose.
+- Include AT MOST 30 representative APIs per category to ensure a focused and valid JSON output.
+- Aim for diverse functional scenarios. If UNUSED APIs are provided, prioritize creating new functional combinations that incorporate them alongside necessary anchor APIs.
+{% endchat %}
+
+{% chat role="user" %}
+Query:
+{{ query_str }}
+
+Output a JSON object grouping APIs by their functional domains:
+```json
+{
+  "Category1": ["func_a", "func_b"],
+  "Category2": ["func_c"]
+}
+```
+
+Rules:
+- Only APIs from context with library prefix
+- Exclude all generic setup/error/config/helper functions
+- Each category = different code path
+- AT MOST 30 APIs per category
+- If UNUSED APIs are provided, prioritize including some to form new functional combinations
+- If no valid APIs found, output {}
+
+Context:
+{{ context_str }}
+{% endchat %}
