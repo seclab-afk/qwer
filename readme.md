@@ -13,7 +13,7 @@ sudo docker build -t afk .
 - you need to bind directory to docker container
 
 ```
-sudo docker run --privileged -it -v /home/user/afk/:/afk/ -v /var/run/docker.sock:/var/run/docker.sock --name afk afk
+sudo docker run --privileged -it -v /path/to/afk/:/afk/ -v /var/run/docker.sock:/var/run/docker.sock --name afk afk
 ```
 
 # need to run
