@@ -13,6 +13,6 @@ services:
     environment:
       - DOCKER_API_VERSION=1.43
     volumes:
-      - /data/afk/:/afk/
+      - /path/to/afk/:/afk/
       - /var/run/docker.sock:/var/run/docker.sock
     working_dir: /afk
