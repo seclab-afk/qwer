@@ -7,13 +7,7 @@ Autonomous Fuzzing Kit
 ## docker build
 
 ```
-sudo docker build -t afk .
-```
-
-- you need to bind directory to docker container
-
-```
-sudo docker run --privileged -it -v /path/to/afk/:/afk/ -v /var/run/docker.sock:/var/run/docker.sock --name afk afk
+docker compose up -d
 ```
 
 # need to run
